@@ -42,8 +42,8 @@ export function createAliasCommands(program: Command, backendService: BackendSer
                 aliases.forEach((alias) => {
                     const status = alias.isActive ? chalk.green('●') : chalk.red('●');
                     console.log(`${status} ${chalk.bold(alias.alias)}`);
-                    if (alias.description) {
-                        console.log(`  ${chalk.gray(alias.description)}`);
+                    if (alias.nickname) {
+                        console.log(`  ${chalk.gray(alias.nickname)}`);
                     }
                     console.log(`  ${chalk.gray(`Created: ${new Date(alias.createdAt).toLocaleString()}`)}`);
                     console.log('');
@@ -57,34 +57,17 @@ export function createAliasCommands(program: Command, backendService: BackendSer
     alias
         .command('create')
         .description('Create a new email alias')
-        .option('-d, --description <description>', 'Alias description')
-        .action(async (options) => {
+        .action(async () => {
             if (!requireAuth()) return;
 
             try {
-                let {description} = options;
-
-                // Prompt for description if not provided
-                if (!description) {
-                    const descAnswer = await inquirer.prompt([
-                        {
-                            type: 'input',
-                            name: 'description',
-                            message: 'Enter a description (optional):',
-                        },
-                    ]);
-                    description = descAnswer.description || undefined;
-                }
-
                 const spinner = ora('Creating alias...').start();
 
-                const alias = await backendService.createAlias(description);
+                const alias = await backendService.createAlias();
 
                 spinner.succeed(chalk.green('✓ Alias created successfully!'));
                 console.log(chalk.bold(`\n${alias.alias}\n`));
-                if (alias.description) {
-                    console.log(chalk.gray(`Description: ${alias.description}`));
-                }
+                console.log(chalk.gray('Tip: set a nickname with "1337legal alias update <aliasId> --nickname <name>"'));
             } catch (error: any) {
                 console.log(chalk.red('❌ Failed to create alias:'), error.response?.data?.message || error.message);
             }
@@ -107,8 +90,8 @@ export function createAliasCommands(program: Command, backendService: BackendSer
                 const status = alias.isActive ? chalk.green('Active') : chalk.red('Inactive');
                 console.log(chalk.bold(`\n${alias.alias}\n`));
                 console.log(`Status: ${status}`);
-                if (alias.description) {
-                    console.log(`Description: ${alias.description}`);
+                if (alias.nickname) {
+                    console.log(`Nickname: ${alias.nickname}`);
                 }
                 console.log(`Created: ${new Date(alias.createdAt).toLocaleString()}`);
                 console.log(`ID: ${chalk.gray(alias.id)}`);
@@ -121,7 +104,7 @@ export function createAliasCommands(program: Command, backendService: BackendSer
     alias
         .command('update <aliasId>')
         .description('Update an alias')
-        .option('-d, --description <description>', 'New description')
+        .option('-n, --nickname <nickname>', 'Set a nickname for this alias')
         .option('-a, --active <active>', 'Set active status (true/false)')
         .action(async (aliasId, options) => {
             if (!requireAuth()) return;
@@ -129,8 +112,8 @@ export function createAliasCommands(program: Command, backendService: BackendSer
             try {
                 const updateData: any = {};
 
-                if (options.description !== undefined) {
-                    updateData.description = options.description;
+                if (options.nickname !== undefined) {
+                    updateData.nickname = options.nickname;
                 }
 
                 if (options.active !== undefined) {

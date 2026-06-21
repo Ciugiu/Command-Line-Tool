@@ -25,13 +25,13 @@ export interface AuthResponse {
 export interface Alias {
     id: string;
     alias: string;
-    description?: string;
+    nickname?: string | null;
     isActive: boolean;
     createdAt: string;
 }
 
 export interface CreateAliasRequest {
-    description?: string;
+    nickname?: string;
 }
 
 export class BackendService {
@@ -197,9 +197,9 @@ export class BackendService {
     /**
      * Create a new alias
      */
-    async createAlias(description?: string): Promise<Alias> {
+    async createAlias(nickname?: string): Promise<Alias> {
         const response = await this.client.post<Alias>('/alias', {
-            description,
+            nickname,
         });
         return response.data;
     }
